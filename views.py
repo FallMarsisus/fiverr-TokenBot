@@ -12,10 +12,11 @@ class ButtonsTokens(discord.ui.View): # Create a class called MyView that subcla
     async def good_button_callback(self, button, interaction):
         prefix, mention, count = self.prefix, self.user.mention, self.count
         await button.channel.send(f"{prefix}add {mention} {count}") # Send a message when the button is clicked
+        await button.message.delete()
         return
         
     @discord.ui.button(label="No", style=discord.ButtonStyle.danger) 
     async def bad_button_callback(self, button, interaction):
-        await button.channel.send("Done not giving tokens") # Send a message when the button is clicked
+        await button.channel.send(f"Done not giving tokens to {self.user.mention}") # Send a message when the button is clicked
         await button.message.delete()
         return
