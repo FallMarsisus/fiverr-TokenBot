@@ -5,10 +5,9 @@ from views import ButtonsTokens
 
 intents = discord.Intents.default()
 intents.message_content = True
+intents.members = True
 
 client = discord.Client(intents=intents)
-
-paypalUser = "marsisus"
 
 prefix = '$'
 
@@ -34,11 +33,26 @@ def makeProfile(id):
     data['users'][-1]["id"] = int(id)
     data['users'][-1]["coins"] = 0
     data['users'][-1]["name"] = ""
-    data["users"][-1]["toadd"] = 0  
+    data["users"][-1]["toadd"] = 0
+    data["users"][-1]["inviteLink"] = ""
 
 @client.event
 async def on_ready():
     print(f'We have logged in as {client.user}')     
+
+
+@client.event
+async def on_member_join(member):
+    global data
+    for i in range(len(data)):
+        try:
+            if data[i]["inviteLink"].approximate_member_count() < data[i]["inviteCount"]:
+                data[i]["inviteCount"] = data[i]["inviteLink"].approximate_member_count()
+                data[i]["coins"] += 10
+
+        except KeyError:
+            continue
+
 
 @client.event
 async def on_message(message):
@@ -46,47 +60,81 @@ async def on_message(message):
     # if message.author == client.user:
     #     return
 
-    if message.content.startswith(f'{prefix}buy'):
-            await message.delete()
-            value = message.content.split(" ")[1]
-            if not value.isdigit() or int(value)<0:
-                await message.channel.send(":no_entry: You didn't enter a right amount of coins")
+    if message.content.startswith(f"{prefix}invite"):
+        await message.delete()
+        exists = verifyIfUser(message.author.id)
+        if exists[0]:
+            index = exists[1]
+        else:
+            index = -1
+            data["users"].append({})
+            makeProfile(int(message.author.id))
+
+        try:
+            if len(data["users"][index]["inviteLink"]) > 0:
+                await message.channel.send(f"{message.author.name}, you can't have more than one invite link pending at the same time. Your invite code is {data['users'][index]['inviteLink']}")
                 return
-            else:
-                value = int(value)
+        except KeyError:
+            pass
+        
 
-                qr = discord.File("qr.jpeg")
-                await message.channel.send(f""":information_source: Go to https://paypal.me/{paypalUser}/{value*0.10}USD in order to get your {value} :coin:
-Your coins will be given after 1 to 10 hours""", file=qr)
-                
-                exists = verifyIfUser(message.author.id)
-                if exists[0]:
-                    index = exists[1]
-                else:
-                    index = -1
-                    data["users"].append({})
-                    makeProfile(int(message.author.id))
-                    
-                
-                data['users'][index]["id"] = int(message.author.id)
-                data["users"][index]["toadd"] = value
-                data["users"][index]["name"] = message.author.name
-            
-                
-                messageGuild = await message.guild.fetch_channel("1105206282593517598")
-                await messageGuild.send(f""":information_source: {message.author.mention} has just used $buy command, after a few minutes, does it show on paypal ?""", view=ButtonsTokens(prefix, message.author, value))
-                    
-                with open("config.json", "w") as file:
-                    json.dump(data, file)
-                                    
-                with open("config.json", "r") as file:
-                    data = json.loads(file.read())
+        invite_link = await message.channel.create_invite()
 
-                    
-                    
-                print(data)
-            
+        data["users"][index]["inviteLink"] = str(invite_link)
+        data['users'][index]["inviteCount"] = 0
+
+        await message.channel.send(f"{message.author.name}, here is your invite link : {invite_link}")
+
+
+        with open("config.json", "w") as file:
+                json.dump(data, file)
+                                
+        with open("config.json", "r") as file:
+            data = json.loads(file.read())
+
+
+
+    if message.content.startswith(f'{prefix}buy'):
+        await message.delete()
+        value = message.content.split(" ")[1]
+        if not value.isdigit() or int(value)<0:
+            await message.channel.send(":no_entry: You didn't enter a right amount of coins")
             return
+        else:
+            value = int(value)
+
+            qr = discord.File("qr.jpeg")
+            await message.channel.send(f""":information_source: Go to https://paypal.me/{paypalUser}/{value*0.10}USD in order to get your {value} :coin:
+Your coins will be given after 1 to 10 hours""", file=qr)
+            
+            exists = verifyIfUser(message.author.id)
+            if exists[0]:
+                index = exists[1]
+            else:
+                index = -1
+                data["users"].append({})
+                makeProfile(int(message.author.id))
+                
+            
+            data['users'][index]["id"] = int(message.author.id)
+            data["users"][index]["toadd"] = value
+            data["users"][index]["name"] = message.author.name
+        
+            
+            messageGuild = await message.guild.fetch_channel("1105206282593517598")
+            await messageGuild.send(f""":information_source: {message.author.mention} has just used $buy command, after a few minutes, does it show on paypal ?""", view=ButtonsTokens(prefix, message.author, value))
+                
+            with open("config.json", "w") as file:
+                json.dump(data, file)
+                                
+            with open("config.json", "r") as file:
+                data = json.loads(file.read())
+
+                
+                
+            print(data)
+        
+        return
         
     if message.content.startswith(f"{prefix}add"):
         await message.delete()
