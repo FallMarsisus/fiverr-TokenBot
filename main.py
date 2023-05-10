@@ -35,6 +35,18 @@ def makeProfile(id):
     data['users'][-1]["name"] = ""
     data["users"][-1]["toadd"] = 0
     data["users"][-1]["inviteLink"] = ""
+    data["users"][-1]["inviteCount"] = 0
+    
+def saveData():
+    global data
+    
+    with open("config.json", "w") as file:
+        json.dump(data, file)
+                                
+    with open("config.json", "r") as file:
+        data = json.loads(file.read())
+
+
 
 @client.event
 async def on_ready():
@@ -44,14 +56,9 @@ async def on_ready():
 @client.event
 async def on_member_join(member):
     global data
-    for i in range(len(data)):
-        try:
-            if data[i]["inviteLink"].approximate_member_count() < data[i]["inviteCount"]:
-                data[i]["inviteCount"] = data[i]["inviteLink"].approximate_member_count()
-                data[i]["coins"] += 10
-
-        except KeyError:
-            continue
+    
+    welcomeChat = await member.guild.fetch_channel("1105797683374989392")
+    await welcomeChat.send(f":information_source: Welcome {member.mention} ! If you've been invited by someone, type **{prefix}join @itsusername**.")
 
 
 @client.event
@@ -59,6 +66,48 @@ async def on_message(message):
     global data, prefix
     # if message.author == client.user:
     #     return
+
+    if message.content.startswith(f"{prefix}join"):
+        await message.delete()
+        
+        exists = verifyIfUser(message.author.id)
+        if exists[0]:
+            index = exists[1]
+        else:
+            index = -1
+            data["users"].append({})
+            makeProfile(int(message.author.id))
+        
+        inviter = message.content.split(" ")[1]
+        if not inviter[2:-1].isdigit():
+            return
+        inviter = int(inviter[2:-1])
+        
+        exists = verifyIfUser(inviter)
+        if exists[0]:
+            indexI = exists[1]
+        else:
+            indexI = -1
+            data["users"].append({})
+            makeProfile(inviter)
+        
+        
+        try:
+            if data['users'][index]["invited"]:
+                await message.channel.send(":no_entry: You have already been invited to the server")
+            
+        except KeyError:
+            pass
+        
+        data["users"][index]["invited"] = True
+        data["users"][indexI]["coins"] += 2
+        data["users"][indexI]["inviteCount"] += 1
+        data["users"][index]["name"] = message.author.name
+        
+        saveData()
+        
+        await message.channel.send(":information_source:")
+        
 
     if message.content.startswith(f"{prefix}invite"):
         await message.delete()
@@ -86,12 +135,7 @@ async def on_message(message):
         await message.channel.send(f"{message.author.name}, here is your invite link : {invite_link}")
 
 
-        with open("config.json", "w") as file:
-                json.dump(data, file)
-                                
-        with open("config.json", "r") as file:
-            data = json.loads(file.read())
-
+        saveData()
 
 
     if message.content.startswith(f'{prefix}buy'):
@@ -103,9 +147,9 @@ async def on_message(message):
         else:
             value = int(value)
 
-            qr = discord.File("qr.jpeg")
-            await message.channel.send(f""":information_source: Go to https://paypal.me/{paypalUser}/{value*0.10}USD in order to get your {value} :coin:
-Your coins will be given after 1 to 10 hours""", file=qr)
+            qr = discord.File("bankqr.png")
+            await message.channel.send(f""":information_source: Scan the code and pay {value*0.1} USD in order to get your {value} :coin:
+                                       They"ll be given to you after 1 to 10 hour(s )""", file=qr)
             
             exists = verifyIfUser(message.author.id)
             if exists[0]:
@@ -124,12 +168,7 @@ Your coins will be given after 1 to 10 hours""", file=qr)
             messageGuild = await message.guild.fetch_channel("1105206282593517598")
             await messageGuild.send(f""":information_source: {message.author.mention} has just used $buy command, after a few minutes, does it show on paypal ?""", view=ButtonsTokens(prefix, message.author, value))
                 
-            with open("config.json", "w") as file:
-                json.dump(data, file)
-                                
-            with open("config.json", "r") as file:
-                data = json.loads(file.read())
-
+            saveData()
                 
                 
             print(data)
@@ -164,11 +203,7 @@ Your coins will be given after 1 to 10 hours""", file=qr)
         data['users'][index]["coins"] += int(count)
         data['users'][index]["toadd"] = 0
         
-        with open("config.json", "w") as file:
-            json.dump(data, file)
-           
-        with open("config.json", "r") as file:
-            data = json.loads(file.read())
+        saveData()
 
         await message.channel.send(f":white_check_mark: Successfuly Added {count} coins to {user} ! New Sold : {data['users'][index]['coins']} :coin:.")
         

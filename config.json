@@ -1,1 +1,21 @@
-{"users": [{"id": 463688085352480789, "coins": 0, "name": "", "toadd": 0, "inviteLink": "https://discord.gg/M2WGMZ6Eej", "inviteCount": 0}]}
+{
+    "users": [
+        {
+            "id": 463688085352480789,
+            "coins": 2,
+            "name": "",
+            "toadd": 0,
+            "inviteLink": "https://discord.gg/M2WGMZ6Eej",
+            "inviteCount": 1
+        },
+        {
+            "id": 856457579412979742,
+            "coins": 0,
+            "name": "TestAccountMarsisus",
+            "toadd": 10,
+            "inviteLink": "",
+            "inviteCount": 0,
+            "invited": true
+        }
+    ]
+}
