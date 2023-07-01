@@ -7,6 +7,8 @@ import asyncio
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
+intents.presences = True
+intents.guilds = True
 
 client = discord.Client(intents=intents)
 
@@ -187,7 +189,7 @@ async def on_message(message):
 
             qr = discord.File("bankqr.png")
             await message.channel.send(f""":information_source: Scan the code and pay {value*0.1} USD in order to get your {value} :coin:
-                                       They'll be given to you after 1 to 10 hour(s)""", file=qr)
+They'll be given to you after 1 to 10 hour(s)""", file=qr)
             
             exists = verifyIfUser(message.author.id)
             if exists[0]:
@@ -217,7 +219,7 @@ async def on_message(message):
         await message.delete()
         
         if not message.author.guild_permissions.administrator:
-            await message.channel.send(f":no_entry: {message.author.name}, you aren't allowed to do that")
+            await message.channel.send(f":no_entry: {message.author.mention}, you aren't allowed to do that")
             return
             
         user = message.content.split(" ")[1]
@@ -278,7 +280,90 @@ async def on_message(message):
         simpleCommandsEmbed.add_field(inline=False, name="**$coins**", value="Shows all the stats you need")
 
         await message.channel.send(embeds=(mainEmbed, simpleCommandsEmbed))
+        
+        
+    if message.content.startswith(f'{prefix}question'):
+        await message.delete()
+        url = message.content.split(" ")[1]
+        if not "chegg.com" in url or not "questions-and-answers" in url :
+            await message.channel.send(":no_entry: You didn't enter a proper link")
+            return
+
+       
+        
+        exists = verifyIfUser(message.author.id)
+        if exists[0]:
+            index = exists[1]
+        else:
+            index = -1
+            data["users"].append({})
+            makeProfile(int(message.author.id))
+            
+        
+        if data['users'][index]["coins"] < 1:
+            await message.channel.send(f":no_entry: {message.author.mention} You don't have enough coins to do that !")
+            return
+    
+        data["users"][index]['coins'] -= 1
+    
+        await message.channel.send(f""":information_source: {message.author.mention} Your link has been taken and an answer will be sent to you on DM in a few hours !""")
+        
+        messageGuild = await message.guild.fetch_channel("1105206282593517598")
+        await messageGuild.send(f""":information_source: {message.author.mention} has just used $question command with :
+{url},
+use $answer on an administrator account with text and images to answer.""")
+            
+        saveData()
+            
+    if message.content.startswith(f"{prefix}answer"):
+        await message.delete()
+    
+        if not message.author.guild_permissions.administrator:
+            await message.channel.send(f":no_entry: {message.author.mention}, you aren't allowed to do that")
+            return
+            
+        userid = message.content.split(" ")[1][2:-1]
+        try:
+            text = message.content.split(" ")[2:]
+            
+            finaltext = ''
+            for i in text:
+                finaltext += i
+                finaltext += ' '
+                
+            text = finaltext
+                
+        except IndexError:
+            text = "See Images"
+            pass
+        
+        images = []
+        for i in message.attachments:
+            images.append(i.url)
+
+        user = message.guild.get_member(int(userid))
+        
+        if user == None:
+            await message.channel.send(f":no_entry: {message.author.mention} You didn't type an existing user")
+            return
+        
+        await user.send(f"""Hello {user.name}, 
+Here is your answer to the question you ordered :
+{text}""")
+
+            
+        
+        if len(images) != 0:
+            await user.send(f"""Here are images :""")
+        for i in images:
+            await user.send(i)        
+            
+        await message.channel.send(f":white_check_mark: Successfuly sent the answer !")
+        
+        return
     
 
-client.run('MTEwMzM5Njc4MDg2NDk4MzExMA.GCmsvA.m9Lf70YWrSN3B0mqoU71V2wfVKjqUukANRCr_U')
+    
+
+client.run('MTEwMzM5Njc4MDg2NDk4MzExMA.GLBrIR.lXXyXf0WyUy3xHD488vvLFP4E0Xew0_1VTG3cU')
 
