@@ -74,11 +74,11 @@ async def on_message(message):
     if message.content.startswith(f"{prefix}acceptrules"):
         await message.delete()
 
-        role = discord.utils.get(message.author.guild.roles, name="Accepted Rules")
+        role = discord.utils.get(message.author.guild.roles, name="Validated Member")
 
         if len(message.content.split(" ")) == 1:
             await message.author.add_roles(role)
-            welcomeMessage = await message.channel.send(f":white_check_mark: {message.author.name}, you're now in the server, enjoy !", delete_after=100)
+            welcomeMessage = await message.channel.send(f":white_check_mark: {message.author.mention}, you're now in the server, enjoy !", delete_after=100)
             await asyncio.sleep(10)
             await welcomeMessage.delete()
             return
@@ -145,7 +145,7 @@ async def on_message(message):
         await asyncio.sleep(10)
         await welcomeMessage.delete()
 
-    if message.channel.id == 1106122173321592842 and message.author != client.user:
+    if message.channel.id == 1102281781820010550 and message.author != client.user:
         await message.delete()
 
     if message.content.startswith(f"{prefix}invite"):
@@ -205,7 +205,7 @@ They'll be given to you after 1 to 10 hour(s)""", file=qr)
             data["users"][index]["name"] = message.author.name
         
             
-            messageGuild = await message.guild.fetch_channel("1105206282593517598")
+            messageGuild = await message.guild.fetch_channel("1124767650355101809")
             await messageGuild.send(f""":information_source: {message.author.mention} has just used $buy command, after a few minutes, does it show on paypal ?""", view=ButtonsTokens(prefix, message.author, value))
                 
             saveData()
@@ -278,6 +278,8 @@ They'll be given to you after 1 to 10 hour(s)""", file=qr)
         simpleCommandsEmbed.add_field(inline=False, name="**$buy** _amount_", value="Sends a link for you to pay tokens and tells an admin that you used the command")
         simpleCommandsEmbed.add_field(inline=False, name="**$invite**", value="If not already generated, creates a new personnal invite link for the server, every time you invite someone, you earn 2 :coin:")
         simpleCommandsEmbed.add_field(inline=False, name="**$coins**", value="Shows all the stats you need")
+        simpleCommandsEmbed.add_field(inline=False, name="**$question _link_**", value="Use your coins to have an answer to a chegg.com question")
+
 
         await message.channel.send(embeds=(mainEmbed, simpleCommandsEmbed))
         
@@ -308,7 +310,7 @@ They'll be given to you after 1 to 10 hour(s)""", file=qr)
     
         await message.channel.send(f""":information_source: {message.author.mention} Your link has been taken and an answer will be sent to you on DM in a few hours !""")
         
-        messageGuild = await message.guild.fetch_channel("1105206282593517598")
+        messageGuild = await message.guild.fetch_channel("1124767830273962035")
         await messageGuild.send(f""":information_source: {message.author.mention} has just used $question command with :
 {url},
 use $answer on an administrator account with text and images to answer.""")
@@ -365,5 +367,5 @@ Here is your answer to the question you ordered :
 
     
 
-client.run('MTEwMzM5Njc4MDg2NDk4MzExMA.GLBrIR.lXXyXf0WyUy3xHD488vvLFP4E0Xew0_1VTG3cU')
+client.run('MTEyNDc2NTU1MjQzMTM0NTczNQ.Go2JUx.PeBRdycskO51R0kDy657C-Ff1hJQIRZzVrVo78')
 
